@@ -138,6 +138,7 @@ scp sd21@farm5-head2:~/lustre_link/parse_single_cell/expdata/skb_run1/multiqc_re
 ```
 
 [Multiqc report](../04_analysis/skb_run1_multiqc_report.html) 
+<a href="../04_analysis/skb_run1_multiqc_report.html" target="_blank">my link</a>
 
 
 
