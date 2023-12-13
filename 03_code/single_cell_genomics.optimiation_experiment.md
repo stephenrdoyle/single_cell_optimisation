@@ -137,7 +137,7 @@ bsub.py 10 fastqc "~sd21/bash_scripts/run_fastqc"
 scp sd21@farm5-head2:~/lustre_link/parse_single_cell/expdata/skb_run1/multiqc_report.html skb_run1_multiqc_report.html
 ```
 
-[Multiqc report](../04_analysis/multiqc_report.html skb_run1_multiqc_report.html) 
+[Multiqc report](../04_analysis/skb_run1_multiqc_report.html) 
 
 
 
