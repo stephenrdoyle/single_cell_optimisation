@@ -86,7 +86,12 @@ agat_convert_sp_gff2gtf.pl --gff trichuris_muris.PRJEB126.WBPS18.annotations.gff
 
 conda deactivate
 
+# filter 
+grep "WormBase" trichuris_muris.PRJEB126.WBPS18.annotations.gtf > wb.gtf
+mv wb.gtf trichuris_muris.PRJEB126.WBPS18.annotations.gtf
 
+# need to make a fix - split-pipe needs a "gene_biotype"
+sed -i 's/; biotype/; gene_biotype/' trichuris_muris.PRJEB126.WBPS18.annotations.gtf
 
 
 split-pipe \
@@ -96,8 +101,24 @@ split-pipe \
 --genes trichuris_muris.PRJEB126.WBPS18.annotations.gtf \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/tmuris
 
+```
 
-# Caenorhabditis celegans
+## Caenorhabditis celegans
+
+```bash
+
+wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS18/species/caenorhabditis_elegans/PRJNA13758/caenorhabditis_elegans.PRJNA13758.WBPS18.genomic.fa.gz
+
+wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS18/species/caenorhabditis_elegans/PRJNA13758/caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gff3.gz
+
+
+# gff to gtf
+conda activate agat
+
+agat_convert_sp_gff2gtf.pl --gff caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gff3.gz --gtf_version 3 --output  caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf
+
+conda deactivate
+
 
 
 split-pipe \
@@ -107,9 +128,13 @@ split-pipe \
 --genes /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/Homo_sapiens.GRCh38.109.gtf.gz \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hg38
 
-
-
 ```
+
+
+
+
+
+
 
 ## Get the data
 
@@ -138,7 +163,6 @@ scp sd21@farm5-head2:~/lustre_link/parse_single_cell/expdata/skb_run1/multiqc_re
 ```
 
 [Multiqc report](../04_analysis/skb_run1_multiqc_report.html) 
-<a href="../04_analysis/skb_run1_multiqc_report.html" target="_blank">my link</a>
 
 
 
