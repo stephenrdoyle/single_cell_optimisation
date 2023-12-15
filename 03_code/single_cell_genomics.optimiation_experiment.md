@@ -119,14 +119,18 @@ agat_convert_sp_gff2gtf.pl --gff caenorhabditis_elegans.PRJNA13758.WBPS18.annota
 
 conda deactivate
 
+grep "WormBase" caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf > tmp
+mv tmp caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf
 
+# need to make a fix - split-pipe needs a "gene_biotype"
+sed -i 's/; biotype/; gene_biotype/' caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf
 
 split-pipe \
 --mode mkref \
---genome_name hg38 \
---fasta /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz \
---genes /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/Homo_sapiens.GRCh38.109.gtf.gz \
---output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hg38
+--genome_name celegans \
+--fasta caenorhabditis_elegans.PRJNA13758.WBPS18.genomic.fa.gz \
+--genes caenorhabditis_elegans.PRJNA13758.WBPS18.annotations.gtf \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/celegans
 
 ```
 
@@ -171,20 +175,58 @@ scp sd21@farm5-head2:~/lustre_link/parse_single_cell/expdata/skb_run1/multiqc_re
 ## Run the pipeline
 ```bash
 
-
-
-
+# celegans
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
 
 split-pipe \
 --mode all \
 --chemistry v2 \
+--nthreads 20 \
 --fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
 --fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
---output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/test-out \
---genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hg38 \
---sample celegans_adult_mixed A1,A7
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_celegans \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/celegans \
+--sample celegans_adult_mixed A1,A7" > run_skb1_celegans.sh
 
 
+bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_celegans.o -e parse_skb1_celegans.e -J parse_skb1_celegans  < run_skb1_celegans.sh
+
+
+# hcontortus
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 20 \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_hcontortus \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus \
+--sample hcontortus_adult_male A4,A10 \
+--sample hcontortus_adult_female A5,A11" > run_skb1_hcontortus.sh
+
+bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_hcontortus.o -e parse_skb1_hcontortus.e -J parse_skb1_hcontortus  < run_skb1_hcontortus.sh
+
+
+# tmuris
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 20 \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_tmuris \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/tmuris \
+--sample tmuris_adult_male A2,A8 \
+--sample tmuris_adult_female A3,A9" > run_skb1_tmuris.sh
+
+bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_tmuris.o -e parse_skb1_tmuris.e -J parse_skb1_tmuris  < run_skb1_tmuris.sh
 
 
 
