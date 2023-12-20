@@ -71,6 +71,45 @@ split-pipe \
 --genes haemonchus_contortus.PRJEB506.WBPS18.annotations.gtf \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus
 
+
+# run spipe make reference
+conda activate spipe
+
+split-pipe \
+--mode mkref \
+--genome_name hcontortus_v2 \
+--fasta haemonchus_contortus.PRJEB506.WBPS18.genomic.fa.gz \
+--genes haemonchus_contortus.PRJEB506.WBPS18.annotations.genes_exons.gtf \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v2
+
+
+grep -v "agat" haemonchus_contortus.PRJEB506.WBPS18.annotations.genes_exons.gtf | grep -v "rRNA" > haemonchus_contortus.PRJEB506.WBPS18.annotations.genes_exons.no-agat.gtf
+
+conda activate spipe
+
+split-pipe \
+--mode mkref \
+--genome_name hcontortus_v3 \
+--fasta haemonchus_contortus.PRJEB506.WBPS18.genomic.fa.gz \
+--genes haemonchus_contortus.PRJEB506.WBPS18.annotations.genes_exons.no-agat.gtf \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v3
+
+
+agat_sp_manage_attributes.pl -f haemonchus_contortus.PRJEB506.WBPS18.annotations.genes_exons.no-agat.gtf -att description,description_source,description_source_acc,Name,transcript_id -o haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal.gff
+
+cat haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal.gff | awk '{if($3=="gene" || $3=="exon" || $3=="RNA") print}' |  sed -e 's/exon://g' -e 's/transcript://g' -e 's/gene://g' > haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal_clean.gff
+
+agat_convert_sp_gff2gtf.pl --gff haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal_clean.gff --gtf_version 3 --output  haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal_clean.gtf
+
+split-pipe \
+--mode mkref \
+--genome_name hcontortus_v4 \
+--fasta haemonchus_contortus.PRJEB506.WBPS18.genomic.fa.gz \
+--genes haemonchus_contortus.PRJEB506.WBPS18.annotations.minimal_clean.gtf \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v4
+
+
+
 ```
 
 ### Trichuris muris
@@ -174,6 +213,11 @@ scp sd21@farm5-head2:~/lustre_link/parse_single_cell/expdata/skb_run1/multiqc_re
 
 ## Run the pipeline
 ```bash
+# Generate parameter file
+echo "post_min_map_frac 0.01" > parfile.txt
+
+# Add this parameter to your spilt-pipe "--mode all" call
+--parfile parfile.txt
 
 # celegans
 echo -e "
@@ -182,7 +226,8 @@ source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
 split-pipe \
 --mode all \
 --chemistry v2 \
---nthreads 20 \
+--nthreads 30 \
+--parfile parfile.txt \
 --fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
 --fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_celegans \
@@ -190,7 +235,7 @@ split-pipe \
 --sample celegans_adult_mixed A1,A7" > run_skb1_celegans.sh
 
 
-bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_celegans.o -e parse_skb1_celegans.e -J parse_skb1_celegans  < run_skb1_celegans.sh
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_celegans.o -e parse_skb1_celegans.e -J parse_skb1_celegans  < run_skb1_celegans.sh
 
 
 # hcontortus
@@ -200,15 +245,83 @@ source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
 split-pipe \
 --mode all \
 --chemistry v2 \
---nthreads 20 \
+--nthreads 30 \
+--parfile parfile.txt \
 --fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
 --fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_hcontortus \
 --genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus \
 --sample hcontortus_adult_male A4,A10 \
---sample hcontortus_adult_female A5,A11" > run_skb1_hcontortus.sh
+--sample hcontortus_adult_female A5,A11 \
+--sample hcontortus_L3 A6,A12" > run_skb1_hcontortus.sh
 
-bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_hcontortus.o -e parse_skb1_hcontortus.e -J parse_skb1_hcontortus  < run_skb1_hcontortus.sh
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_hcontortus.o -e parse_skb1_hcontortus.e -J parse_skb1_hcontortus  < run_skb1_hcontortus.sh
+
+
+# hcontortus_v2
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_hcontortus_v2 \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v2 \
+--sample hcontortus_adult_male A4,A10 \
+--sample hcontortus_adult_female A5,A11 \
+--sample hcontortus_L3 A6,A12" > run_skb1_hcontortus_v2.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_hcontortus_v2.o -e parse_skb1_hcontortus_v2.e -J parse_skb1_hcontortus_v2  < run_skb1_hcontortus_v2.sh
+
+
+# hcontortus_v3
+
+
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_hcontortus_v3 \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v3 \
+--sample hcontortus_adult_male A4,A10 \
+--sample hcontortus_adult_female A5,A11 \
+--sample hcontortus_L3 A6,A12" > run_skb1_hcontortus_v3.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_hcontortus_v3.o -e parse_skb1_hcontortus_v3.e -J parse_skb1_hcontortus_v3  < run_skb1_hcontortus_v3.sh
+
+
+# hcontortus_v4
+
+
+echo -e "
+source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_hcontortus_v4 \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v4 \
+--sample hcontortus_adult_male A4,A10 \
+--sample hcontortus_adult_female A5,A11 \
+--sample hcontortus_L3 A6,A12" > run_skb1_hcontortus_v4.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_hcontortus_v4.o -e parse_skb1_hcontortus_v4.e -J parse_skb1_hcontortus_v4  < run_skb1_hcontortus_v4.sh
+
+
 
 
 # tmuris
@@ -218,7 +331,8 @@ source /nfs/users/nfs_s/sd21/lustre_link/software/anaconda3/bin/activate spipe
 split-pipe \
 --mode all \
 --chemistry v2 \
---nthreads 20 \
+--nthreads 30 \
+--parfile parfile.txt \
 --fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_1.fastq.gz \
 --fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run1/48163_1#1_2.fastq.gz \
 --output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb1_tmuris \
@@ -226,7 +340,7 @@ split-pipe \
 --sample tmuris_adult_male A2,A8 \
 --sample tmuris_adult_female A3,A9" > run_skb1_tmuris.sh
 
-bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>10000] rusage[mem=10000]" -n 20 -M10000 -o parse_skb1_tmuris.o -e parse_skb1_tmuris.e -J parse_skb1_tmuris  < run_skb1_tmuris.sh
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb1_tmuris.o -e parse_skb1_tmuris.e -J parse_skb1_tmuris  < run_skb1_tmuris.sh
 
 
 
