@@ -360,3 +360,89 @@ Parse - Run 2
 | 4             | Trichuris muris        | adult male   | tmuris_adult_male       | A7,A8,A9       |
 | 5             | Caenorhabditis elegans | mixed adults | celegans_adult_mixed    | A10,A11        |
 | 6             | Haemonchus contortus   | L3           | hcontortus_L3           | A12            |
+
+
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb2_hcontortus_v4 \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v4 \
+--sample hcontortus_adult_female A1,A2 \
+--sample hcontortus_adult_male A3,A4 \
+--sample tmuris_adult_female A5,A6 \
+--sample tmuris_adult_male A7,A8,A9 \
+--sample celegans_adult_mixed A10,A11 \
+--sample hcontortus_L3 A12"
+
+# hcontortus
+echo -e "
+source ~sd21/lustre_link/software/miniforge3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb2_hcontortus \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/hcontortus_v4 \
+--sample hcontortus_adult_female A1,A2 \
+--sample hcontortus_adult_male A3,A4 \
+--sample hcontortus_L3 A12" > run_skb2_hcontortus.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb2_hcontortus.o -e parse_skb2_hcontortus.e -J parse_skb2_hcontortus  < run_skb2_hcontortus.sh
+
+# tmuris
+echo -e "
+source ~sd21/lustre_link/software/miniforge3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb2_tmuris \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/tmuris \
+--sample tmuris_adult_female A5,A6 \
+--sample tmuris_adult_male A7,A8,A9" > run_skb2_tmuris.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb2_tmuris.o -e parse_skb2_tmuris.e -J parse_skb2_tmuris  < run_skb2_tmuris.sh
+
+# celegans
+echo -e "
+source ~sd21/lustre_link/software/miniforge3/bin/activate spipe
+
+split-pipe \
+--mode all \
+--chemistry v2 \
+--nthreads 30 \
+--parfile parfile.txt \
+--fq1 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_1.fastq.gz \
+--fq2 /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/expdata/skb_run2/48240_1#1_2.fastq.gz \
+--output_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/analysis/skb2_celegans \
+--genome_dir /nfs/users/nfs_s/sd21/lustre_link/parse_single_cell/genomes/celegans \
+--sample celegans_adult_mixed A10,A11" > run_skb2_celegans.sh
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb2_celegans.o -e parse_skb2_celegans.e -J parse_skb2_celegans  < run_skb2_celegans.sh
+
+
+
+
+
+
+bsub -q hugemem -E 'test -e /nfs/users/nfs_s/sd21' -R "select[mem>200000] rusage[mem=200000]" -n 30 -M200000 -o parse_skb2_celegans.o -e parse_skb2_celegans.e -J parse_skb2_celegans  < run_skb2_celegans.sh
+
+echo -e "
+source ~sd21/lustre_link/software/miniforge3/bin/activate busco
+
+busco --in teladorsagia_circumcincta_tci2_wsi2.4.fa --out teladorsagia_circumcincta_tci2_wsi2.4_genome_nematoda_odb10_long --mode genome --lineage_dataset /nfs/users/nfs_s/sd21/lustre_link/databases/busco/nematoda_odb10 --cpu 20 -f -r --long" > run_busco.sh
+
+bsub -q long -E 'test -e /nfs/users/nfs_s/sd21' -n 20 -R "span[hosts=1] select[mem>5000] rusage[mem=5000]" -M5000 -o busco_tci2_wsi2.4_genome_long.o -e busco_tci2_wsi2.4_genome_long.e -J busco_tci2_wsi2.4_genome_long < run_busco.sh
