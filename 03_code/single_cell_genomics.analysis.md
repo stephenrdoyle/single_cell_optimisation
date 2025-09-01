@@ -176,18 +176,19 @@ ggsave("figure_haemonchus_trichuris_lifestage_nuclei-clusters.pdf", height=250, 
 ggsave("figure_haemonchus_trichuris_lifestage_nuclei-clusters.png")
 ```
 
+```R
 FeaturePlot(data, features = c("Gene:WBGene00290339","Gene:WBGene00295760", "Gene:WBGene00299858" )) +
 patchwork::plot_layout(ncol = 3, nrow = 1)
 
 
 ggsave("figure_tm_gene-expression_examples.pdf", height=100, width=330, units="mm")
 ggsave("figure_tm_gene-expression_examples.png")
+```
 
 
 
 
-
-
+```R
 markers <- FindAllMarkers(data, only.pos = TRUE)
 
 markers %>%
@@ -238,3 +239,5 @@ FeaturePlot(data, features = c(
 
 FeaturePlot(object = data,
     features = c("Gene:WBGene00300018", "Gene:WBGene00299858"))
+
+```
